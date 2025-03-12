@@ -62,8 +62,10 @@ const JobApplication = () => {
         console.log("Analyzing Extracted Text...");
 
        
-        const phoneRegex = /\b(?:\+91[-\s]?)?[6-9]\d{9}\b/;
-        const foundPhone = text.match(phoneRegex)?.[0] || "";
+        const phoneRegex = /\b(?:\+91[-\s]?)?\d{5}[-\s]?\d{5}\b/;
+
+      
+        const foundPhone = text.match(phoneRegex)?.[0]?.replace(/[-\s().]/g, "") || "";
 
         
         const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/;
@@ -71,6 +73,8 @@ const JobApplication = () => {
 
         console.log("Detected Phone Number:", foundPhone);
         console.log("Detected Email:", foundEmail);
+        
+
 
         setPhoneNumber(foundPhone);
         setEmail(foundEmail);  // Set the email in state
