@@ -1,12 +1,36 @@
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Hero from "./Component/Hero";
+import JobList from "./Component/Jobs/JobList";
+import JobApplication from "./Component/Jobs/JobApplication"; // Import Job Application Form
+import Navbar from "./Component/Navbar";
+import NotFound from "./Component/RouteNootFound";
 
 function App() {
-  
-
   return (
-    <>
-      <h1 className="text-red-500">App</h1>
-    </>
-  )
+    <Router>
+      <Navbar />
+      <Routes>
+       
+        <Route
+          path="/"
+          element={
+            <>
+              <Hero />
+              <JobList />
+            </>
+          }
+        />
+
+       
+        <Route path="/apply/:id" element={<JobApplication />} />
+
+
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
