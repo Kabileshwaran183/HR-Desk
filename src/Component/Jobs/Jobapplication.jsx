@@ -60,28 +60,48 @@ const JobApplication = () => {
    
     const extractDetails = (text) => {
         console.log("Analyzing Extracted Text...");
-
-       
+    
+        // Extract phone number (handles +91 and space-separated formats)
         const phoneRegex = /\b(?:\+91[-\s]?)?\d{5}[-\s]?\d{5}\b/;
-
-      
-        const foundPhone = text.match(phoneRegex)?.[0]?.replace(/[-\s().]/g, "") || "";
-
-        
+        const foundPhone = text.match(phoneRegex)?.[0] || "";
+    
+        // Extract email
         const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/;
         const foundEmail = text.match(emailRegex)?.[0] || "";
-
+    
+        // Extract first name and last name
+        const nameRegex = /\b([A-Z][a-z]+)\s([A-Z][a-z]*)\b/;
+        const foundName = text.match(nameRegex);
+    
+        let firstName = "";
+        let lastName = "";
+    
+        // Alternative Name Extraction - Looks for the first two uppercase words
+        const uppercaseNameRegex = /\b([A-Z]+)\s([A-Z]+)\b/;
+        const foundUppercaseName = text.match(uppercaseNameRegex);
+    
+        if (foundUppercaseName) {
+            firstName = foundUppercaseName[1];
+            lastName = foundUppercaseName[2];
+        } else if (foundName) {
+            firstName = foundName[1];
+            lastName = foundName[2];
+        }
+    
         console.log("Detected Phone Number:", foundPhone);
         console.log("Detected Email:", foundEmail);
-        
-
-
+        console.log("Detected First Name:", firstName);
+        console.log("Detected Last Name:", lastName);
+    
+        // Update state
         setPhoneNumber(foundPhone);
-        setEmail(foundEmail);  // Set the email in state
-        setLoading(false); // Hide loading animation
-        setParsed(true); // Show success message
+        setEmail(foundEmail);
+        setFirstName(firstName);
+        setLastName(lastName);
+        setLoading(false);
+        setParsed(true);
     };
-
+    
    
     const handleCancelResume = () => {
         setResumeName("");
