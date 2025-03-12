@@ -1,8 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Hero from "./Component/Hero";
-import JobList from "./Component/Jobs/JobList";
-import JobApplication from "./Component/Jobs/JobApplication"; // Import Job Application Form
+import JobList from "./Component/Jobs/Joblist";
+import JobApplication from "./Component/Jobs/Jobapplication"; // Import Job Application Form
 import Navbar from "./Component/Navbar";
 import NotFound from "./Component/RouteNootFound";
 
