@@ -1,38 +1,53 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import * as pdfjs from "pdfjs-dist";
-import "pdfjs-dist/build/pdf.worker.min";  
-import { FaTimesCircle } from "react-icons/fa"; 
+import "pdfjs-dist/build/pdf.worker.min";
+import { FaTimesCircle } from "react-icons/fa";
 
 const JobApplication = () => {
     const { id } = useParams();
     const [resumeName, setResumeName] = useState("");
-    const [firstName, setFirstName] = useState(""); 
-    const [lastName, setLastName] = useState("");  
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
-    const [email, setEmail] = useState(""); 
-    const [yearOfGraduation, setYearOfGraduation] = useState(""); 
-    const [gender, setGender] = useState(""); 
-    const [experience, setExperience] = useState(""); 
-    const [skills, setSkills] = useState(""); 
-    const [location, setLocation] = useState(""); 
+    const [email, setEmail] = useState("");
+    const [yearOfGraduation, setYearOfGraduation] = useState("");
+    const [gender, setGender] = useState("");
+    const [experience, setExperience] = useState("");
+    const [skills, setSkills] = useState("");
+    const [location, setLocation] = useState("");
     const [pincode, setPincode] = useState("");
     const [loading, setLoading] = useState(false);
     const [parsed, setParsed] = useState(false);
-   
+
     const handleFileChange = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
+        // Reset previous state before processing a new resume
+        setResumeName("");
+        setPhoneNumber("");
+        setEmail("");
+        setFirstName("");
+        setLastName("");
+        setSkills("");
+        setExperience("");
+        setLoading(true);
+        setParsed(false);
+
         setResumeName(file.name);
-        setLoading(true); // Show loading animation
 
         if (file.type === "application/pdf") {
-            await extractTextFromPDF(file);
+            await extractTextFromPDF(file); // Extract email & phone via regex
         }
+        await parseResumeWithAI(file); // Extract other details via Affinda
+
+        // Reset the input field to allow re-uploading the same file
+        event.target.value = null;
     };
 
-   
+
+    // **📌 Function to Extract Text from PDF (for Regex Extraction of Email & Phone)**
     const extractTextFromPDF = async (file) => {
         try {
             pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -43,72 +58,109 @@ const JobApplication = () => {
             const pdf = await pdfjs.getDocument(URL.createObjectURL(file)).promise;
             let text = "";
 
-            
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
                 text += content.items.map((item) => item.str).join(" ") + " ";
             }
 
-            console.log("Extracted Resume Text:", text); // ✅ Debugging log
+            console.log("Extracted Resume Text:", text);
             extractDetails(text);
         } catch (error) {
             console.error("Error extracting text from PDF:", error);
         }
     };
 
-   
+    // **📌 Function to Extract Email & Phone via Regex**
     const extractDetails = (text) => {
         console.log("Analyzing Extracted Text...");
-    
-        // Extract phone number (handles +91 and space-separated formats)
+
+        // Regex for extracting phone number (+91, spaces, dashes supported)
+
         const phoneRegex = /\b(?:\+91[-\s]?)?\d{5}[-\s]?\d{5}\b/;
         const foundPhone = text.match(phoneRegex)?.[0] || "";
-    
-        // Extract email
+
+        // Regex for extracting email
         const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/;
         const foundEmail = text.match(emailRegex)?.[0] || "";
-    
-        // Extract first name and last name
-        const nameRegex = /\b([A-Z][a-z]+)\s([A-Z][a-z]*)\b/;
-        const foundName = text.match(nameRegex);
-    
-        let firstName = "";
-        let lastName = "";
-    
-        // Alternative Name Extraction - Looks for the first two uppercase words
-        const uppercaseNameRegex = /\b([A-Z]+)\s([A-Z]+)\b/;
-        const foundUppercaseName = text.match(uppercaseNameRegex);
-    
-        if (foundUppercaseName) {
-            firstName = foundUppercaseName[1];
-            lastName = foundUppercaseName[2];
-        } else if (foundName) {
-            firstName = foundName[1];
-            lastName = foundName[2];
-        }
-    
+
         console.log("Detected Phone Number:", foundPhone);
         console.log("Detected Email:", foundEmail);
-        console.log("Detected First Name:", firstName);
-        console.log("Detected Last Name:", lastName);
-    
+
         // Update state
         setPhoneNumber(foundPhone);
         setEmail(foundEmail);
-        setFirstName(firstName);
-        setLastName(lastName);
+    };
+
+    // **📌 Function to Use Affinda API for Name, Skills, Experience, etc.**
+    const parseResumeWithAI = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("https://api.affinda.com/v2/resumes", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${import.meta.env.VITE_AFFINDA_API_KEY}`,
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+            console.log("📌 Affinda API Response:", result);
+
+            if (result.data) {
+                setFirstName(result.data.name?.first || "");
+                setLastName(result.data.name?.last || "");
+                setLocation(result.data.location?.text || "");
+                setPincode(result.data.location?.postcode || "");
+                setYearOfGraduation(result.data.education?.[0]?.completion_date || "");
+                setGender(result.data.personal_info?.gender || "");
+
+                // **📌 Extract and Filter Skills Dynamically**
+                const unwantedSkills = [
+                    "Marketing", "Marketing Materials", "Sensors", "Analytics",
+                    "Intranet", "Digital Marketing", "Management"
+                ];
+
+                const extractedSkills = result.data.skills
+                    ?.map(skill => skill.name.trim())
+                    ?.filter(skill => skill.length > 0 && !unwantedSkills.includes(skill))
+                    ?.join(", ") || "No relevant skills found";
+
+                setSkills(extractedSkills);
+
+                // **📌 Extract Experience Dynamically**
+                const extractedExperience = result.data.work_experience
+                    ?.map(exp => `${exp.job_title} at ${exp.organisation}, ${exp.dates?.start_date || ""} - ${exp.dates?.end_date || "Present"}`)
+                    .join("\n") || "No work experience found";
+
+                setExperience(extractedExperience);
+            } else {
+                console.error("❌ No data received from Affinda.");
+            }
+        } catch (error) {
+            console.error("❌ Error parsing resume with AI:", error);
+        }
+
         setLoading(false);
         setParsed(true);
     };
-    
-   
+
+
     const handleCancelResume = () => {
         setResumeName("");
         setPhoneNumber("");
         setEmail("");
+        setFirstName("");
+        setLastName("");
+        setSkills("");
+        setExperience("");
         setLoading(false);
         setParsed(false);
+
+        // Reset the file input manually
+        document.getElementById("resumeUpload").value = "";
     };
 
     return (
@@ -124,16 +176,18 @@ const JobApplication = () => {
                         <span className="text-sm font-medium text-gray-600">
                             {resumeName ? resumeName : "Upload Your Resume (PDF, DOCX)"}
                         </span>
+                
                         <input
                             type="file"
+                            id="resumeUpload"  // Add this ID
                             className="hidden"
                             accept=".pdf"
                             onChange={handleFileChange}
                             required
                         />
+
                     </label>
 
-                  
                     {resumeName && (
                         <button
                             type="button"
@@ -145,21 +199,19 @@ const JobApplication = () => {
                     )}
                 </div>
 
-                
                 {loading && (
                     <div className="flex justify-center mt-4">
                         <div className="w-12 h-12 border-4 border-t-transparent border-blue-500 border-solid rounded-full animate-spin"></div>
                     </div>
                 )}
 
-               
                 {parsed && !loading && (
                     <div className="text-green-600 mt-4 text-center">
                         <p>Resume parsed successfully. Carefully review your information before submitting the application.</p>
                     </div>
                 )}
 
-               
+                {/* First Name */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">First Name</label>
                     <input
@@ -172,7 +224,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-                
+                {/* Last Name */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Last Name</label>
                     <input
@@ -185,7 +237,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-                
+                {/* Phone Number */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                     <input
@@ -197,7 +249,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-             
+                {/* Email */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Email</label>
                     <input
@@ -209,7 +261,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-                
+                {/* Year of Graduation */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Year of Graduation</label>
                     <input
@@ -222,7 +274,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-             
+                {/* Gender */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Gender</label>
                     <select
@@ -238,7 +290,7 @@ const JobApplication = () => {
                     </select>
                 </div>
 
-               
+                {/* Experience */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Experience (in years)</label>
                     <input
@@ -251,7 +303,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-               
+                {/* Skills */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Skills</label>
                     <textarea
@@ -263,7 +315,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-              
+                {/* Location */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Current Location</label>
                     <input
@@ -276,7 +328,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-               
+                {/* Pincode */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Pincode</label>
                     <input
@@ -289,7 +341,7 @@ const JobApplication = () => {
                     />
                 </div>
 
-           
+                {/* Buttons */}
                 <div className="flex justify-between mt-6">
                     <button
                         type="submit"
@@ -300,6 +352,7 @@ const JobApplication = () => {
                     <button
                         type="button"
                         className="w-48 bg-gray-400 text-white p-3 rounded-lg hover:bg-gray-500 transition duration-300"
+                        onClick={handleCancelResume}
                     >
                         Cancel
                     </button>
@@ -307,6 +360,7 @@ const JobApplication = () => {
             </form>
         </div>
     );
+
 };
 
 export default JobApplication;
