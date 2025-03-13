@@ -100,7 +100,7 @@ const JobApplication = () => {
         setLastName(lastName);
         setLoading(false);
         setParsed(true);
-    };
+    }; 
     
    
     const handleCancelResume = () => {
