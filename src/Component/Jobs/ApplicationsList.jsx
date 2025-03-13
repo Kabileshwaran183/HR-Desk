@@ -46,7 +46,19 @@ const ApplicationsList = () => {
                                 <td className="border p-2">{app.skills}</td>
                                 <td className="border p-2">{app.location}</td>
                                 <td className="border p-2">{app.pincode}</td>
-                                <td className="border p-2">{app.resumeName}</td>
+                                <td className="border p-2">
+                                    {app.resumeName ? (
+                                        <a
+                                            href={`https://your-backend.com/uploads/${app.resumeName}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 underline"
+                                        >
+                                            Download Resume
+                                        </a>
+                                    ) : "No Resume"}
+                                </td>
+
                             </tr>
                         ))}
                     </tbody>
