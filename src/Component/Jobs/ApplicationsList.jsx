@@ -31,6 +31,9 @@ const ApplicationsList = () => {
                             <th className="border p-2">Phone</th>
                             <th className="border p-2">Experience</th>
                             <th className="border p-2">Skills</th>
+                            <th className="border p-2">Location</th>
+                            <th className="border p-2">Pincode</th>
+                                <th className="border p-2">Resume </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,6 +44,9 @@ const ApplicationsList = () => {
                                 <td className="border p-2">{app.phoneNumber}</td>
                                 <td className="border p-2">{app.experience}</td>
                                 <td className="border p-2">{app.skills}</td>
+                                <td className="border p-2">{app.location}</td>
+                                <td className="border p-2">{app.pincode}</td>
+                                <td className="border p-2">{app.resumeName}</td>
                             </tr>
                         ))}
                     </tbody>
