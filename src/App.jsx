@@ -7,6 +7,7 @@ import Navbar from "./Component/Navbar";
 import NotFound from "./Component/RouteNootFound";
 
 
+
 function App() {
   return (
     <Router>
@@ -20,6 +21,7 @@ function App() {
             <>
               <Hero />
               <JobList />
+            
             </>
           }
         />
