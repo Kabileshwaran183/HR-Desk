@@ -8,7 +8,18 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 const cors = require("cors");
-app.use(cors({ origin: "*" })); // Allow all origins temporarily
+
+// Allow all origins
+app.use(cors());
+
+// OR Allow specific origins (for security)
+app.use(
+    cors({
+        origin: ["http://localhost:5000", "https://hr-desk-kabileshwaran183s-projects.vercel.app/"],
+        methods: "GET,POST,PUT,DELETE",
+        credentials: true, // Allow cookies if needed
+    })
+);
 
 app.use(express.json());
 
@@ -48,7 +59,7 @@ app.post("/api/apply", async (req, res) => {
 });
 
 // API Route: Retrieve All Applications
-app.get("/api/applications", async (req, res) => {
+app.get("GET https://hr-desk-kabileshwaran183s-projects.vercel.app//api/applications/", async (req, res) => {
     try {
         const applications = await JobApplication.find();
         res.status(200).json(applications);
