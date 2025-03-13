@@ -60,7 +60,6 @@ const JobApplication = () => {
             skills,
             location,
             pincode,
-            resumeName,
         };
 
         try {
@@ -83,7 +82,6 @@ const JobApplication = () => {
                 setSkills("");
                 setLocation("");
                 setPincode("");
-                setResumeName("");
             } else {
                 alert("Error submitting application");
             }
