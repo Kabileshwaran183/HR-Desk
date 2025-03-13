@@ -24,8 +24,7 @@ function App() {
           }
         />
 
-       
-        <Route path="/apply/:id" element={<JobApplication />} />
+               <Route path="/apply/:id" element={<JobApplication />} />
 
 
 
