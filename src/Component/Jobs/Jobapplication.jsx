@@ -45,6 +45,51 @@ const JobApplication = () => {
         // Reset the input field to allow re-uploading the same file
         event.target.value = null;
     };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const formData = {
+            jobId: id,
+            firstName,
+            lastName,
+            phoneNumber,
+            email,
+            yearOfGraduation,
+            gender,
+            experience,
+            skills,
+            location,
+            pincode,
+        };
+
+        try {
+            const response = await fetch("http://localhost:5000/api/apply", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                alert("Application Submitted Successfully!");
+                // Reset form fields
+                setFirstName("");
+                setLastName("");
+                setPhoneNumber("");
+                setEmail("");
+                setYearOfGraduation("");
+                setGender("");
+                setExperience("");
+                setSkills("");
+                setLocation("");
+                setPincode("");
+            } else {
+                alert("Error submitting application");
+            }
+        } catch (error) {
+            console.error("❌ Submission Error:", error);
+        }
+    };
+
 
 
     // **📌 Function to Extract Text from PDF (for Regex Extraction of Email & Phone)**
@@ -169,7 +214,7 @@ const JobApplication = () => {
                 Apply for Job ID: {id}
             </h2>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
                 {/* 📌 Resume Upload */}
                 <div className="p-4 border-2 border-dashed rounded-lg text-center relative">
                     <label className="cursor-pointer flex flex-col items-center">
@@ -343,7 +388,7 @@ const JobApplication = () => {
 
                 {/* Buttons */}
                 <div className="flex justify-between mt-6">
-                    <button
+                    <button onClick={handleSubmit}
                         type="submit"
                         className="w-48 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300"
                     >
