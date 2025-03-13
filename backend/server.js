@@ -55,8 +55,10 @@ app.get("/api/applications", async (req, res) => {
     }
 });
 
-// Start Server
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Default Route
 app.get("/", (req, res) => {
     res.send("HR Desk Backend is Running 🚀");
 });
+
+// Start Server
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
